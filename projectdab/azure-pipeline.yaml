@@ -1,8 +1,8 @@
 trigger:
-- main
+- dev
  
 variables: 
-  - group: DAB VG
+  - group: DAB VG DEV
  
 pool:
   vmImage: 'ubuntu-latest'
@@ -27,7 +27,7 @@ steps:
     echo "client_id = $(CLIENT_ID)" >> ~/.databrickscfg
     echo "client_secret = $(CLIENT_SECRET)" >> ~/.databrickscfg
     cd projectdab
-    databricks bundle validate -t prod
+    databricks bundle validate -t dev
     echo "Bundle validate" 
   displayName: 'Validate Databricks Bundle'
   env:
@@ -37,7 +37,7 @@ steps:
  
 - script: |
     cd projectdab
-    databricks bundle deploy -t prod 
+    databricks bundle deploy -t dev
     echo "Bundle Deploy" 
   displayName: 'Deploy Databricks Bundle'
   env:
