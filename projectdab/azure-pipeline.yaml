@@ -2,7 +2,7 @@ trigger:
 - master
  
 variables: 
-  - group: sp-data
+  - group: DAB VG
  
 pool:
   vmImage: 'ubuntu-latest'
