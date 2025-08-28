@@ -36,7 +36,7 @@ steps:
     CLIENT_SECRET: $(CLIENT_SECRET)
  
 - script: |
-
+    cd projectdab
     databricks bundle deploy -t prod 
     echo "Bundle Deploy" 
   displayName: 'Deploy Databricks Bundle'
