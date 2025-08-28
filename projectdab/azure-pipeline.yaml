@@ -26,7 +26,7 @@ steps:
     echo "host = $(DATABRICKS_HOST)" >> ~/.databrickscfg
     echo "client_id = $(CLIENT_ID)" >> ~/.databrickscfg
     echo "client_secret = $(CLIENT_SECRET)" >> ~/.databrickscfg
- 
+    cd projectdab
     databricks bundle validate -t prod
     echo "Bundle validate" 
   displayName: 'Validate Databricks Bundle'
