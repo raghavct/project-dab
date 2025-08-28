@@ -1,8 +1,8 @@
 trigger:
-- main
+- dev
  
 variables: 
-  - group: DAB VG
+  - group: DAB VG DEV
  
 pool:
   vmImage: 'ubuntu-latest'
