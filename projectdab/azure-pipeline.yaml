@@ -1,5 +1,5 @@
 trigger:
-- master
+- main
  
 variables: 
   - group: DAB VG
@@ -37,7 +37,7 @@ steps:
  
 - script: |
 
-    databricks bundle deploy -t prod --force-lock
+    databricks bundle deploy -t prod 
     echo "Bundle Deploy" 
   displayName: 'Deploy Databricks Bundle'
   env:
