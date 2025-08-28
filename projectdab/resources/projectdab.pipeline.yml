@@ -1,0 +1,14 @@
+# The main pipeline for projectdab
+resources:
+  pipelines:
+    projectdab_pipeline:
+      name: projectdab_pipeline
+      ## Specify the 'catalog' field to configure this pipeline to make use of Unity Catalog:
+      # catalog: catalog_name
+      schema: projectdab_${bundle.target}
+      libraries:
+        - notebook:
+            path: ../src/dlt_pipeline.ipynb
+
+      configuration:
+        bundle.sourcePath: ${workspace.file_path}/src
