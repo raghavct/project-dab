@@ -2,7 +2,7 @@ trigger:
 - main
  
 variables: 
-  - group: DAB VG 
+  - group: DAB VG PROD
  
 pool:
   vmImage: 'ubuntu-latest'
