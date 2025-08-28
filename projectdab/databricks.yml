@@ -34,7 +34,7 @@ targets:
   prod:
     mode: production
     workspace:
-      host: https://adb-2312158498360611.11.azuredatabricks.net
+      host: https://adb-2081885434201834.14.azuredatabricks.net
       # We explicitly deploy to /Workspace/Users/raghav.tyagi@celebaltech.com to make sure we only have a single copy.
       root_path: /Workspace/Shared/project-dab
     permissions:
