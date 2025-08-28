@@ -22,7 +22,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-2312158498360611.11.azuredatabricks.net
+      host: https://adb-2081885434201834.14.azuredatabricks.net
 
     presets:
       # Set dynamic_version: true on all artifacts of type "whl".
