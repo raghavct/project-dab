@@ -1,0 +1,46 @@
+trigger:
+- master
+ 
+variables: 
+  - group: sp-data
+ 
+pool:
+  vmImage: 'ubuntu-latest'
+ 
+steps:
+- checkout: self
+ 
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.9'
+    addToPath: true
+ 
+- script: |
+    curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh 
+    pip install wheel 
+    pip install uv
+  displayName: 'Install Databricks CLI and Bundle'
+ 
+- script: |
+    echo "[DEFAULT]" > ~/.databrickscfg
+    echo "host = $(DATABRICKS_HOST)" >> ~/.databrickscfg
+    echo "client_id = $(CLIENT_ID)" >> ~/.databrickscfg
+    echo "client_secret = $(CLIENT_SECRET)" >> ~/.databrickscfg
+ 
+    databricks bundle validate -t prod
+    echo "Bundle validate" 
+  displayName: 'Validate Databricks Bundle'
+  env:
+    DATABRICKS_HOST: $(DATABRICKS_HOST)
+    CLIENT_ID: $(CLIENT_ID)
+    CLIENT_SECRET: $(CLIENT_SECRET)
+ 
+- script: |
+
+    databricks bundle deploy -t prod --force-lock
+    echo "Bundle Deploy" 
+  displayName: 'Deploy Databricks Bundle'
+  env:
+    DATABRICKS_HOST: $(DATABRICKS_HOST)
+    CLIENT_ID: $(CLIENT_ID)
+    CLIENT_SECRET: $(CLIENT_SECRET)
