@@ -8,42 +8,39 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Environment
     runs-on: ubuntu-latest
-    environment: production
+    environment: dev   # Change if needed
+    defaults:
+      run:
+        working-directory: .
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.10
 
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libyaml-dev build-essential
-
-      - name: Upgrade pip, setuptools, wheel
+      - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade setuptools wheel
+          python -m pip install --upgrade pip wheel
+          python -m pip install databricks-bundle
 
-      - name: Install Databricks Bundle (prebuilt wheels only)
+      - name: Configure Databricks PAT
         run: |
-          pip install --only-binary=:all: databricks-bundle
+          echo "DATABRICKS_HOST=${{ secrets.DATABRICKS_HOST }}" >> $GITHUB_ENV
+          echo "DATABRICKS_TOKEN=${{ secrets.DATABRICKS_PAT }}" >> $GITHUB_ENV
 
       - name: Validate Databricks Bundle
         run: |
-          databricks bundle validate -t prod
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-          DATABRICKS_BUNDLE_ENV: prod
+          python --version
+          echo "Validating Databricks Bundle..."
+          databricks bundle validate -t dev
 
       - name: Deploy Databricks Bundle
         run: |
-          databricks bundle deploy -t prod --auto-approve
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-          DATABRICKS_BUNDLE_ENV: prod
+          echo "Deploying Databricks Bundle..."
+          databricks bundle deploy -t dev --auto-approve
