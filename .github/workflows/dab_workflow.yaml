@@ -5,87 +5,44 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
-  deploy_dev:
-    name: Deploy to Dev
-    if: github.ref == 'refs/heads/dev'
+  deploy:
+    name: "Deploy Databricks Bundle"
     runs-on: ubuntu-latest
-    environment: dev
+    environment: deployment
     defaults:
       run:
         working-directory: .
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Build Tools
         run: |
-          python -m pip install --upgrade pip
-          pip install wheel databricks-bundle
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev
+          python -m pip install --upgrade pip setuptools wheel cython
 
-      - name: Validate Databricks Bundle (Dev)
-        run: |
-          echo "Starting Databricks Validation (Dev)..."
-          databricks bundle validate -t dev
+      - name: Install Databricks Bundle
+        run: pip install databricks-bundle
+
+      - name: Validate Databricks Bundle
+        run: databricks bundle validate -t deployment
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-          DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_PAT_DEV }}
-          DATABRICKS_BUNDLE_ENV: dev
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PAT }}
+          DATABRICKS_BUNDLE_ENV: deployment
 
-      - name: Deploy Databricks Bundle (Dev)
-        run: |
-          echo "Starting Databricks Deployment (Dev)..."
-          databricks bundle deploy -t dev --auto-approve
+      - name: Deploy Databricks Bundle
+        run: databricks bundle deploy -t deployment --auto-approve
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-          DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_PAT_DEV }}
-          DATABRICKS_BUNDLE_ENV: dev
-
-  deploy_prod:
-    name: Deploy to Prod
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: prod
-    defaults:
-      run:
-        working-directory: .
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install wheel databricks-bundle
-
-      - name: Validate Databricks Bundle (Prod)
-        run: |
-          echo "Starting Databricks Validation (Prod)..."
-          databricks bundle validate -t prod
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_PAT_PROD }}
-          DATABRICKS_BUNDLE_ENV: prod
-
-      - name: Deploy Databricks Bundle (Prod)
-        run: |
-          echo "Starting Databricks Deployment (Prod)..."
-          databricks bundle deploy -t prod
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_PAT_PROD }}
-          DATABRICKS_BUNDLE_ENV: prod
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PAT }}
+          DATABRICKS_BUNDLE_ENV: deployment
