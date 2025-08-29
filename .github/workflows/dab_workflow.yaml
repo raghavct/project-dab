@@ -51,7 +51,6 @@ jobs:
           echo " Setting up Databricks Auth..."
           export DATABRICKS_ACCESS_TOKEN="$accessToken"
           echo "Starting Databricks Validation (Dev)..."
-          cd DAB-instrument-replacement
           databricks bundle validate -t dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
@@ -60,7 +59,6 @@ jobs:
       - name: Deploy Databricks Bundle (Dev)
         run: |
           echo "Starting Databricks Deployment (Dev)..."
-          cd DAB-instrument-replacement
           databricks bundle deploy -t dev --auto-approve
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
@@ -69,7 +67,7 @@ jobs:
   deploy_prod:
     name: "Deploy to Prod"
     if: github.ref == 'refs/heads/main'
-    runs-on: [ self-hosted ]
+    runs-on: ubuntu-latest
     environment: prod
     defaults:
       run:
@@ -110,7 +108,6 @@ jobs:
           export DATABRICKS_ACCESS_TOKEN="$accessToken"
           
           echo "Starting Databricks Validation (Prod)..."
-          cd DAB-instrument-replacement
           databricks bundle validate -t prod 
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
@@ -119,7 +116,6 @@ jobs:
       - name: Deploy Databricks Bundle (Prod)
         run: |
           echo "Starting Databricks Deployment (Prod)..."
-          cd DAB-instrument-replacement
           databricks bundle deploy -t prod
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
