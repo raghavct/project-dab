@@ -2,6 +2,8 @@ name: Deploy to Prod
  
 on:
   workflow_dispatch:
+  push:
+    branches: main
  
  
 jobs:
