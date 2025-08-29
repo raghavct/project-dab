@@ -4,12 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - main  # single branch deployment
 
 jobs:
   deploy:
-    name: Deploy Bundle
+    name: Deploy to Databricks
     runs-on: ubuntu-latest
+    environment: production
     defaults:
       run:
         working-directory: .
@@ -18,33 +19,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Install system build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install system dependencies
+      - name: Upgrade pip, setuptools, wheel
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev libffi-dev libssl-dev
+          python -m pip install --upgrade pip
+          pip install --upgrade setuptools wheel
 
-      - name: Install Python build tools
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel cython
+          pip install --no-build-isolation pyyaml==5.4.1
+          pip install databricks-bundle
 
-      - name: Install Databricks Bundle
-        run: pip install databricks-bundle
-
-      - name: Validate Bundle
-        run: databricks bundle validate -t deployment
+      - name: Validate Databricks Bundle
+        run: |
+          echo "Starting validation..."
+          databricks bundle validate -t prod
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PAT }}
-          DATABRICKS_BUNDLE_ENV: deployment
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_BUNDLE_ENV: prod
 
-      - name: Deploy Bundle
-        run: databricks bundle deploy -t deployment --auto-approve
+      - name: Deploy Databricks Bundle
+        run: |
+          echo "Starting deployment..."
+          databricks bundle deploy -t prod --auto-approve
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PAT }}
-          DATABRICKS_BUNDLE_ENV: deployment
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_BUNDLE_ENV: prod
