@@ -26,6 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install wheel
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh 
  
       - name: Set HOME variable
         run: echo "HOME=/home/github-runner" >> $GITHUB_ENV
