@@ -8,9 +8,8 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Environment
     runs-on: ubuntu-latest
-    environment: dev   # Change if needed
+    environment: dev
     defaults:
       run:
         working-directory: .
@@ -22,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"   # Use quotes to prevent YAML from interpreting as 3.1
 
       - name: Install Dependencies
         run: |
@@ -37,10 +36,8 @@ jobs:
       - name: Validate Databricks Bundle
         run: |
           python --version
-          echo "Validating Databricks Bundle..."
           databricks bundle validate -t dev
 
       - name: Deploy Databricks Bundle
         run: |
-          echo "Deploying Databricks Bundle..."
           databricks bundle deploy -t dev --auto-approve
