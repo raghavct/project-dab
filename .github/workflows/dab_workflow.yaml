@@ -1,12 +1,12 @@
 name: Deploy Databricks Bundle
- 
+
 on:
   workflow_dispatch:
   push:
     branches:
-      - dev
       - main
- 
+      - dev   # if you create dev branch later
+
 jobs:
   deploy_dev:
     name: "Deploy to Dev"
@@ -16,54 +16,55 @@ jobs:
     defaults:
       run:
         working-directory: .
- 
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
- 
-      - name: Install Dependencies
+
+      - name: Install Python & Databricks CLI
         run: |
-          python3 -m ensurepip --upgrade
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv
+          python3 -m venv venv
+          source venv/bin/activate
+          python3 -m pip install --upgrade pip wheel databricks-bundles
 
       - name: Set HOME variable
         run: echo "HOME=/home/github-runner" >> $GITHUB_ENV
- 
-      - name: Validate Databricks Bundle (Dev)
+
+      - name: Azure Login
         run: |
-          python3 --version
-          echo " Logging in to Azure..."
           az login --service-principal \
             --username "${{ secrets.DATABRICKS_CLIENT_ID }}" \
             --password "${{ secrets.DATABRICKS_CLIENT_SECRET }}" \
             --tenant "6d2c7112-af95-4e9e-acd6-d2a990e40851" \
             --allow-no-subscriptions
-          
-          # Get access token
-          echo " Fetching Azure Access Token..."
-          accessToken=$(az account get-access-token \
+
+      - name: Get Azure Access Token
+        id: az_token
+        run: |
+          echo "ACCESS_TOKEN=$(az account get-access-token \
             --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d \
-            --query accessToken \
-            --output tsv)
-          
-          # Configure Databricks CLI auth
-          echo " Setting up Databricks Auth..."
-          export DATABRICKS_ACCESS_TOKEN="$accessToken"
-          echo "Starting Databricks Validation (Dev)..."
+            --query accessToken --output tsv)" >> $GITHUB_ENV
+
+      - name: Validate Databricks Bundle (Dev)
+        run: |
+          source venv/bin/activate
+          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
           databricks bundle validate -t dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
           DATABRICKS_BUNDLE_ENV: dev
- 
+
       - name: Deploy Databricks Bundle (Dev)
         run: |
-          echo "Starting Databricks Deployment (Dev)..."
+          source venv/bin/activate
+          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
           databricks bundle deploy -t dev --auto-approve
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
           DATABRICKS_BUNDLE_ENV: dev
- 
+
   deploy_prod:
     name: "Deploy to Prod"
     if: github.ref == 'refs/heads/main'
@@ -72,53 +73,51 @@ jobs:
     defaults:
       run:
         working-directory: .
- 
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
- 
-      - name: Install Dependencies
+
+      - name: Install Python & Databricks CLI
         run: |
-          python3 -m ensurepip --upgrade
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel
- 
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv
+          python3 -m venv venv
+          source venv/bin/activate
+          python3 -m pip install --upgrade pip wheel databricks-bundles
+
       - name: Set HOME variable
         run: echo "HOME=/home/github-runner" >> $GITHUB_ENV
- 
-      - name: Validate Databricks Bundle (Prod)
+
+      - name: Azure Login
         run: |
-          python3 --version
-          echo " Logging in to Azure..."
           az login --service-principal \
             --username "${{ secrets.DATABRICKS_CLIENT_ID }}" \
             --password "${{ secrets.DATABRICKS_CLIENT_SECRET }}" \
             --tenant "6d2c7112-af95-4e9e-acd6-d2a990e40851" \
             --allow-no-subscriptions
-          
-          # Get access token
-          echo " Fetching Azure Access Token..."
-          accessToken=$(az account get-access-token \
+
+      - name: Get Azure Access Token
+        id: az_token
+        run: |
+          echo "ACCESS_TOKEN=$(az account get-access-token \
             --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d \
-            --query accessToken \
-            --output tsv)
-          
-          # Configure Databricks CLI auth
-          echo " Setting up Databricks Auth..."
-          export DATABRICKS_ACCESS_TOKEN="$accessToken"
-          
-          echo "Starting Databricks Validation (Prod)..."
-          databricks bundle validate -t prod 
+            --query accessToken --output tsv)" >> $GITHUB_ENV
+
+      - name: Validate Databricks Bundle (Prod)
+        run: |
+          source venv/bin/activate
+          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
+          databricks bundle validate -t prod
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_BUNDLE_ENV: prod
- 
+
       - name: Deploy Databricks Bundle (Prod)
         run: |
-          echo "Starting Databricks Deployment (Prod)..."
+          source venv/bin/activate
+          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
           databricks bundle deploy -t prod
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_BUNDLE_ENV: prod
-
-
