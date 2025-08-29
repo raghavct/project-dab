@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - dev
       - main
-      - dev   # if you create dev branch later
 
 jobs:
   deploy_dev:
-    name: "Deploy to Dev"
+    name: Deploy to Dev
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     environment: dev
@@ -21,52 +21,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Python & Databricks CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv
-          python3 -m venv venv
-          source venv/bin/activate
-          python3 -m pip install --upgrade pip wheel databricks-bundles
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      - name: Set HOME variable
-        run: echo "HOME=/home/github-runner" >> $GITHUB_ENV
-
-      - name: Azure Login
+      - name: Install Dependencies
         run: |
-          az login --service-principal \
-            --username "${{ secrets.DATABRICKS_CLIENT_ID }}" \
-            --password "${{ secrets.DATABRICKS_CLIENT_SECRET }}" \
-            --tenant "6d2c7112-af95-4e9e-acd6-d2a990e40851" \
-            --allow-no-subscriptions
+          python -m pip install --upgrade pip
+          pip install wheel databricks-bundle
 
-      - name: Get Azure Access Token
-        id: az_token
+      - name: Configure Databricks CLI with PAT
         run: |
-          echo "ACCESS_TOKEN=$(az account get-access-token \
-            --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d \
-            --query accessToken --output tsv)" >> $GITHUB_ENV
+          echo "DATABRICKS_HOST=${{ secrets.DATABRICKS_HOST_DEV }}" >> $GITHUB_ENV
+          echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_PAT_DEV }}" >> $GITHUB_ENV
+          echo "DATABRICKS_BUNDLE_ENV=dev" >> $GITHUB_ENV
 
       - name: Validate Databricks Bundle (Dev)
-        run: |
-          source venv/bin/activate
-          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
-          databricks bundle validate -t dev
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-          DATABRICKS_BUNDLE_ENV: dev
+        run: databricks bundle validate -t dev
 
       - name: Deploy Databricks Bundle (Dev)
-        run: |
-          source venv/bin/activate
-          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
-          databricks bundle deploy -t dev --auto-approve
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-          DATABRICKS_BUNDLE_ENV: dev
+        run: databricks bundle deploy -t dev --auto-approve
 
   deploy_prod:
-    name: "Deploy to Prod"
+    name: Deploy to Prod
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: prod
@@ -78,46 +56,24 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Python & Databricks CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv
-          python3 -m venv venv
-          source venv/bin/activate
-          python3 -m pip install --upgrade pip wheel databricks-bundles
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      - name: Set HOME variable
-        run: echo "HOME=/home/github-runner" >> $GITHUB_ENV
-
-      - name: Azure Login
+      - name: Install Dependencies
         run: |
-          az login --service-principal \
-            --username "${{ secrets.DATABRICKS_CLIENT_ID }}" \
-            --password "${{ secrets.DATABRICKS_CLIENT_SECRET }}" \
-            --tenant "6d2c7112-af95-4e9e-acd6-d2a990e40851" \
-            --allow-no-subscriptions
+          python -m pip install --upgrade pip
+          pip install wheel databricks-bundle
 
-      - name: Get Azure Access Token
-        id: az_token
+      - name: Configure Databricks CLI with PAT
         run: |
-          echo "ACCESS_TOKEN=$(az account get-access-token \
-            --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d \
-            --query accessToken --output tsv)" >> $GITHUB_ENV
+          echo "DATABRICKS_HOST=${{ secrets.DATABRICKS_HOST_PROD }}" >> $GITHUB_ENV
+          echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_PAT_PROD }}" >> $GITHUB_ENV
+          echo "DATABRICKS_BUNDLE_ENV=prod" >> $GITHUB_ENV
 
       - name: Validate Databricks Bundle (Prod)
-        run: |
-          source venv/bin/activate
-          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
-          databricks bundle validate -t prod
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_BUNDLE_ENV: prod
+        run: databricks bundle validate -t prod
 
       - name: Deploy Databricks Bundle (Prod)
-        run: |
-          source venv/bin/activate
-          export DATABRICKS_ACCESS_TOKEN="$ACCESS_TOKEN"
-          databricks bundle deploy -t prod
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_BUNDLE_ENV: prod
+        run: databricks bundle deploy -t prod
