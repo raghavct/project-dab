@@ -4,10 +4,6 @@ bundle:
   name: projectdab
   uuid: 0fad7ddd-455b-4fc7-a465-868c811631f7
 
-artifacts:
-  python_artifact:
-    type: whl
-    build: uv build --wheel
 
 include:
   - resources/*.yml
